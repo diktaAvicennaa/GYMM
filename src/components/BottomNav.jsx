@@ -1,4 +1,6 @@
 // src/components/BottomNav.jsx
+import { NavLink } from 'react-router-dom';
+
 export default function BottomNav({ activeTab, setActiveTab }) {
   const navItems = [
     { id: 'home', icon: 'fas fa-home', label: 'Home' },
@@ -7,7 +9,7 @@ export default function BottomNav({ activeTab, setActiveTab }) {
   ];
 
   return (
-    <nav className="flex-shrink-0 flex justify-around items-center bg-[#151515] border-t border-[#333333] z-20 absolute bottom-0 w-full pb-safe">
+    <nav className="flex-shrink-0 flex justify-around items-center bg-[#151515] border-t border-[#333333] z-50 fixed bottom-0 w-full max-w-[480px] pb-safe">
       {navItems.map((item) => {
         const isActive = activeTab === item.id;
         let iconClass = item.icon;
@@ -17,7 +19,7 @@ export default function BottomNav({ activeTab, setActiveTab }) {
           <button
             key={item.id}
             onClick={() => setActiveTab(item.id)}
-            className={`flex flex-col items-center justify-center py-2 px-3 transition-all duration-200 relative ${
+            className={`flex flex-col items-center justify-center py-2 px-3 transition-all duration-200 relative flex-1 ${
               isActive ? 'text-purple-500' : 'text-[#9e9e9e] hover:text-[#f0f0f0]'
             }`}
           >
