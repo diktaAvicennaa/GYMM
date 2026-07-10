@@ -79,6 +79,10 @@ export default function Workout() {
     setSelectedExercises(updated);
   };
 
+  const sanitizeDecimalInput = (value) => value.replace(/[^0-9.]/g, '').replace(/(\..*)\./g, '$1');
+
+  const sanitizeIntegerInput = (value) => value.replace(/[^0-9]/g, '');
+
   const handleRemoveRoutineSet = (exIndex, setIndex) => {
     const updated = [...selectedExercises];
     updated[exIndex].sets.splice(setIndex, 1);
@@ -222,40 +226,65 @@ export default function Workout() {
   if (currentView === 'create') {
     return (
       <div className="flex flex-col h-full bg-black animate-fade-in pb-20">
-        <div className="flex justify-between items-center px-4 py-3 bg-[#151515] border-b border-[#333333] sticky top-0 z-10">
+        <div className="flex justify-between items-center px-4 py-3 bg-gym-secondary border-b border-[#333333] sticky top-0 z-10">
           <button onClick={() => { setCurrentView('main'); setEditingRoutineId(null); }} className="text-blue-500 text-sm font-medium">Cancel</button>
           <h2 className="text-white font-semibold">{editingRoutineId ? 'Edit Routine' : 'Create Routine'}</h2>
-          <button onClick={handleSaveRoutine} disabled={loading} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold">{loading ? '...' : 'Save'}</button>
+          <button onClick={handleSaveRoutine} disabled={loading} className="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-sm font-semibold disabled:opacity-60">{loading ? '...' : 'Save'}</button>
         </div>
         
         <div className="px-4 py-4">
-          <input type="text" placeholder="Routine title" className="w-full bg-transparent text-white text-xl font-bold border-b border-[#333333] pb-3 outline-none" value={routineName} onChange={(e) => setRoutineName(e.target.value)} />
+          <div className="rounded-2xl border border-[#333333] bg-gym-secondary p-4 shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
+            <label className="block text-xs font-semibold uppercase tracking-[0.18em] text-[#9e9e9e] mb-2">
+              Routine title
+            </label>
+            <input
+              type="text"
+              placeholder="e.g. Push Day"
+              className="w-full bg-[#1c1c1e] text-white text-base font-semibold rounded-xl px-4 py-3 outline-none border border-transparent focus:border-blue-500"
+              value={routineName}
+              onChange={(e) => setRoutineName(e.target.value)}
+            />
+          </div>
         </div>
         
         <div className="flex-1 px-4 mt-2 overflow-y-auto">
           {selectedExercises.length === 0 ? (
-            <div className="flex flex-col items-center justify-center mt-10"><p className="text-[#9e9e9e]">No exercises added yet.</p></div>
+            <div className="flex flex-col items-center justify-center mt-10 rounded-2xl border border-dashed border-[#333333] bg-gym-secondary px-6 py-10 text-center">
+              <p className="text-white font-medium">No exercises added yet.</p>
+              <p className="text-[#9e9e9e] text-sm mt-1">Tambah gerakan dulu, lalu isi set, kg, dan reps-nya.</p>
+            </div>
           ) : (
             <div className="flex flex-col gap-6 mb-6">
               {selectedExercises.map((item, exIdx) => (
-                <div key={exIdx} className="flex flex-col">
-                  {/* Exercise Header */}
-                  <div className="flex justify-between items-center mb-2">
+                <div key={exIdx} className="flex flex-col rounded-2xl border border-[#333333] bg-gym-secondary p-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
+                  <div className="flex justify-between items-start gap-3 mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-xl">{item.exercise.icon}</div>
-                      <span className="text-blue-500 font-bold text-lg">{item.exercise.name}</span>
+                      <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shrink-0">
+                        <svg className="w-10 h-10 object-contain" aria-hidden="true">
+                          <use href="/icons.svg#exercise-icon" />
+                        </svg>
+                      </div>
+                      <div>
+                        <span className="block text-white font-bold text-lg leading-tight">{item.exercise.name}</span>
+                        <span className="text-[#9e9e9e] text-sm">Atur set, kg, dan reps di bawah</span>
+                      </div>
                     </div>
-                    <i className="fas fa-ellipsis-v text-[#9e9e9e] p-2 cursor-pointer" onClick={() => handleRemoveExerciseFromRoutine(exIdx)}></i>
+                    <button
+                      type="button"
+                      className="text-[#9e9e9e] p-2 rounded-lg hover:bg-[#1c1c1e] hover:text-red-500 transition-colors"
+                      onClick={() => handleRemoveExerciseFromRoutine(exIdx)}
+                      aria-label={`Remove ${item.exercise.name}`}
+                    >
+                      <i className="fas fa-trash"></i>
+                    </button>
                   </div>
                   
-                  {/* Notes & Rest Timer (UI Only) */}
-                  <input type="text" placeholder="Add routine notes here" className="bg-transparent text-[#9e9e9e] text-sm w-full outline-none mb-3" />
-                  <div className="flex items-center gap-2 text-blue-500 text-sm font-medium mb-4">
+                  <input type="text" placeholder="Add routine notes here" className="bg-[#1c1c1e] text-white text-sm w-full outline-none mb-4 px-4 py-3 rounded-xl border border-[#333333] placeholder-[#6b6b6b]" />
+                  <div className="flex items-center gap-2 text-blue-400 text-sm font-medium mb-4">
                     <i className="fas fa-stopwatch"></i> Rest Timer: OFF
                   </div>
 
-                  {/* Sets Table */}
-                  <div className="grid grid-cols-[50px_1fr_1fr_40px] text-[#9e9e9e] text-xs font-bold mb-2 items-center text-center">
+                  <div className="grid grid-cols-[50px_1fr_1fr_40px] text-[#9e9e9e] text-xs font-bold mb-2 items-center text-center uppercase tracking-[0.12em]">
                     <div>SET</div>
                     <div>KG</div>
                     <div>REPS</div>
@@ -265,13 +294,34 @@ export default function Workout() {
                   {item.sets.map((set, setIdx) => (
                     <div key={setIdx} className="grid grid-cols-[50px_1fr_1fr_40px] gap-3 items-center text-center mb-2">
                       <div className="text-white font-bold">{setIdx + 1}</div>
-                      <input type="number" placeholder="-" className="bg-[#252525] text-white text-center py-2 rounded-lg outline-none font-semibold" value={set.weight} onChange={(e) => handleUpdateRoutineSet(exIdx, setIdx, 'weight', e.target.value)} />
-                      <input type="number" placeholder="-" className="bg-[#252525] text-white text-center py-2 rounded-lg outline-none font-semibold" value={set.reps} onChange={(e) => handleUpdateRoutineSet(exIdx, setIdx, 'reps', e.target.value)} />
-                      <i className="fas fa-times text-[#6b6b6b] p-2 cursor-pointer hover:text-red-500" onClick={() => handleRemoveRoutineSet(exIdx, setIdx)}></i>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0"
+                        className="bg-[#1c1c1e] border border-[#333333] text-white text-center h-12 rounded-xl outline-none font-semibold focus:border-blue-500"
+                        value={set.weight}
+                        onChange={(e) => handleUpdateRoutineSet(exIdx, setIdx, 'weight', sanitizeDecimalInput(e.target.value))}
+                      />
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="0"
+                        className="bg-[#1c1c1e] border border-[#333333] text-white text-center h-12 rounded-xl outline-none font-semibold focus:border-blue-500"
+                        value={set.reps}
+                        onChange={(e) => handleUpdateRoutineSet(exIdx, setIdx, 'reps', sanitizeIntegerInput(e.target.value))}
+                      />
+                      <button
+                        type="button"
+                        className="text-[#6b6b6b] p-2 rounded-lg hover:bg-[#1c1c1e] hover:text-red-500 transition-colors"
+                        onClick={() => handleRemoveRoutineSet(exIdx, setIdx)}
+                        aria-label={`Remove set ${setIdx + 1}`}
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
                     </div>
                   ))}
 
-                  <button onClick={() => handleAddRoutineSet(exIdx)} className="w-full bg-[#1c1c1e] text-white font-semibold py-3 rounded-xl mt-2 hover:bg-[#252525]">
+                  <button onClick={() => handleAddRoutineSet(exIdx)} className="w-full bg-[#1c1c1e] text-white font-semibold py-3 rounded-xl mt-3 hover:bg-gym-card border border-[#333333] transition-colors">
                     + Add Set
                   </button>
                 </div>
@@ -293,7 +343,7 @@ export default function Workout() {
   if (currentView === 'add_exercise') {
     return (
       <div className="flex flex-col h-full bg-black animate-fade-in pb-20">
-        <div className="flex justify-between items-center px-4 py-3 bg-[#151515] border-b border-[#333333]">
+        <div className="flex justify-between items-center px-4 py-3 bg-gym-secondary border-b border-[#333333]">
           <button onClick={() => setCurrentView('create')} className="text-blue-500 text-sm font-medium">Cancel</button>
           <h2 className="text-white font-semibold">Add Exercise</h2>
           <div className="w-10"></div>
@@ -322,7 +372,11 @@ export default function Workout() {
                 className="flex items-center justify-between py-3 border-b border-[#1c1c1e] cursor-pointer hover:bg-[#1c1c1e] px-2"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-2xl">{ex.icon}</div>
+                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
+                    <svg className="w-10 h-10 object-contain" aria-hidden="true">
+                      <use href="/icons.svg#exercise-icon" />
+                    </svg>
+                  </div>
                   <div>
                     <h4 className="text-white font-medium">{ex.name}</h4>
                     <p className="text-[#9e9e9e] text-sm">{ex.muscle}</p>
@@ -347,19 +401,19 @@ export default function Workout() {
   if (currentView === 'create_custom_exercise') {
     return (
       <div className="flex flex-col h-full bg-black animate-fade-in pb-20">
-        <div className="flex justify-between items-center px-4 py-3 bg-[#151515] border-b border-[#333333]">
+        <div className="flex justify-between items-center px-4 py-3 bg-gym-secondary border-b border-[#333333]">
           <button onClick={() => setCurrentView('add_exercise')} className="text-blue-500 text-sm font-medium">Cancel</button>
           <h2 className="text-white font-semibold">Custom Exercise</h2>
-          <button onClick={handleCreateCustomExercise} disabled={loading} className="text-blue-500 text-sm font-medium">Save</button>
+          <button onClick={handleCreateCustomExercise} disabled={loading} className="text-blue-500 text-sm font-medium disabled:opacity-60">Save</button>
         </div>
         <div className="p-4 flex flex-col gap-4">
           <div>
-            <label className="text-[#9e9e9e] text-xs font-bold uppercase mb-1 block">Exercise Name</label>
-            <input type="text" placeholder="e.g. My Special Curls" className="w-full bg-[#1c1c1e] text-white p-3 rounded-lg outline-none" value={newExName} onChange={(e) => setNewExName(e.target.value)} autoFocus />
+            <label className="text-[#9e9e9e] text-xs font-bold uppercase mb-2 block tracking-[0.18em]">Exercise Name</label>
+            <input type="text" placeholder="e.g. My Special Curls" className="w-full bg-[#1c1c1e] text-white p-3 rounded-xl outline-none border border-[#333333] focus:border-blue-500" value={newExName} onChange={(e) => setNewExName(e.target.value)} autoFocus />
           </div>
           <div>
-            <label className="text-[#9e9e9e] text-xs font-bold uppercase mb-1 block">Target Muscle</label>
-            <select className="w-full bg-[#1c1c1e] text-white p-3 rounded-lg outline-none" value={newExMuscle} onChange={(e) => setNewExMuscle(e.target.value)}>
+            <label className="text-[#9e9e9e] text-xs font-bold uppercase mb-2 block tracking-[0.18em]">Target Muscle</label>
+            <select className="w-full bg-[#1c1c1e] text-white p-3 rounded-xl outline-none border border-[#333333] focus:border-blue-500" value={newExMuscle} onChange={(e) => setNewExMuscle(e.target.value)}>
               {uniqueMuscles.filter(m => m !== 'All').map(m => (<option key={m} value={m}>{m}</option>))}
             </select>
           </div>
@@ -374,7 +428,7 @@ export default function Workout() {
   if (currentView === 'active_workout' && activeSession) {
     return (
       <div className="flex flex-col h-full bg-black animate-fade-in pb-24">
-        <div className="flex justify-between items-center px-4 py-4 bg-[#151515] border-b border-[#333333] sticky top-0 z-10">
+        <div className="flex justify-between items-center px-4 py-4 bg-gym-secondary border-b border-[#333333] sticky top-0 z-10">
           <button onClick={() => { if(window.confirm("Batalkan latihan? Data tidak akan disimpan.")) { setActiveSession(null); setCurrentView('main'); } }} className="text-red-500 text-sm font-medium">Cancel</button>
           <div className="text-center">
             <h2 className="text-white font-semibold leading-tight">{activeSession.name}</h2>
@@ -388,16 +442,21 @@ export default function Workout() {
             <div className="text-center text-[#6b6b6b] mt-10 p-4">Belum ada gerakan. Latihan freestyle!</div>
           ) : (
             activeSession.items.map((item, itemIdx) => (
-              <div key={itemIdx} className="mb-6 bg-[#151515] p-3 rounded-xl border border-[#333333]">
-                <h3 className="text-blue-400 font-bold mb-3 flex items-center gap-2"><span>{item.exercise.icon}</span> {item.exercise.name}</h3>
+              <div key={itemIdx} className="mb-6 bg-gym-secondary p-3 rounded-xl border border-[#333333]">
+                <h3 className="text-blue-400 font-bold mb-3 flex items-center gap-2">
+                  <svg className="w-10 h-10 object-contain" aria-hidden="true">
+                    <use href="/icons.svg#exercise-icon" />
+                  </svg>
+                  {item.exercise.name}
+                </h3>
                 <div className="grid grid-cols-4 text-[#9e9e9e] text-xs font-bold text-center mb-2 px-2">
                   <div>SET</div><div>KG</div><div>REPS</div><div>DONE</div>
                 </div>
                 {item.sets.map((set, setIdx) => (
                   <div key={setIdx} className={`grid grid-cols-4 gap-2 items-center text-center mb-2 px-2 py-1 rounded-lg ${set.done ? 'bg-blue-500/10' : ''}`}>
                     <div className="text-[#9e9e9e] font-bold">{setIdx + 1}</div>
-                    <input type="number" placeholder="0" className="bg-[#252525] text-white text-center py-1 rounded-md outline-none" value={set.weight} onChange={(e) => handleUpdateActiveSet(itemIdx, setIdx, 'weight', e.target.value)} />
-                    <input type="number" placeholder="0" className="bg-[#252525] text-white text-center py-1 rounded-md outline-none" value={set.reps} onChange={(e) => handleUpdateActiveSet(itemIdx, setIdx, 'reps', e.target.value)} />
+                    <input type="text" inputMode="decimal" placeholder="0" className="bg-gym-card text-white text-center py-1 rounded-md outline-none" value={set.weight} onChange={(e) => handleUpdateActiveSet(itemIdx, setIdx, 'weight', sanitizeDecimalInput(e.target.value))} />
+                    <input type="text" inputMode="numeric" placeholder="0" className="bg-gym-card text-white text-center py-1 rounded-md outline-none" value={set.reps} onChange={(e) => handleUpdateActiveSet(itemIdx, setIdx, 'reps', sanitizeIntegerInput(e.target.value))} />
                     <button onClick={() => handleUpdateActiveSet(itemIdx, setIdx, 'done', !set.done)} className={`w-8 h-8 mx-auto rounded-md flex items-center justify-center transition-colors ${set.done ? 'bg-blue-500 text-white' : 'bg-[#333333] text-[#9e9e9e]'}`}><i className="fas fa-check"></i></button>
                   </div>
                 ))}
@@ -420,7 +479,7 @@ export default function Workout() {
     ];
     return (
       <div className="flex flex-col h-full bg-black animate-fade-in pb-20">
-        <div className="flex justify-between items-center px-4 py-3 bg-[#151515] border-b border-[#333333]">
+        <div className="flex justify-between items-center px-4 py-3 bg-gym-secondary border-b border-[#333333]">
           <button onClick={() => setCurrentView('main')} className="text-blue-500 text-sm font-medium">Back</button>
           <h2 className="text-white font-semibold">Explore Routines</h2>
           <div className="w-10"></div>
@@ -454,7 +513,7 @@ export default function Workout() {
       </div>
 
       <div className="px-4">
-        <button onClick={startEmptyWorkout} className="w-full bg-[#1c1c1e] hover:bg-[#252525] text-white font-medium py-4 rounded-xl flex items-center justify-center gap-2">
+        <button onClick={startEmptyWorkout} className="w-full bg-[#1c1c1e] hover:bg-gym-card text-white font-medium py-4 rounded-xl flex items-center justify-center gap-2">
           <i className="fas fa-plus text-lg"></i> Start Empty Workout
         </button>
       </div>
@@ -465,10 +524,10 @@ export default function Workout() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-4">
-          <button onClick={() => { setRoutineName(''); setSelectedExercises([]); setEditingRoutineId(null); setCurrentView('create'); }} className="bg-[#1c1c1e] hover:bg-[#252525] text-white py-3 rounded-xl flex justify-center gap-2 font-medium">
+          <button onClick={() => { setRoutineName(''); setSelectedExercises([]); setEditingRoutineId(null); setCurrentView('create'); }} className="bg-[#1c1c1e] hover:bg-gym-card text-white py-3 rounded-xl flex justify-center gap-2 font-medium">
             <i className="fas fa-clipboard-list"></i> New Routine
           </button>
-          <button onClick={() => setCurrentView('explore')} className="bg-[#1c1c1e] hover:bg-[#252525] text-white py-3 rounded-xl flex justify-center gap-2 font-medium">
+          <button onClick={() => setCurrentView('explore')} className="bg-[#1c1c1e] hover:bg-gym-card text-white py-3 rounded-xl flex justify-center gap-2 font-medium">
             <i className="fas fa-search"></i> Explore
           </button>
         </div>
@@ -486,10 +545,27 @@ export default function Workout() {
                   <div className="relative">
                     <i className="fas fa-ellipsis-h text-[#6b6b6b] p-2 cursor-pointer hover:text-white" onClick={() => setOpenDropdownId(openDropdownId === routine.id ? null : routine.id)}></i>
                     {openDropdownId === routine.id && (
-                      <div className="absolute right-0 mt-2 w-32 bg-[#252525] rounded-lg shadow-lg z-10 overflow-hidden border border-[#333333]">
-                        <button onClick={() => handleEditRoutine(routine)} className="w-full text-left px-4 py-3 text-sm text-white hover:bg-[#333333] font-medium border-b border-[#333333]">Edit</button>
-                        <button onClick={() => handleDeleteRoutine(routine.id)} className="w-full text-left px-4 py-3 text-sm text-red-500 hover:bg-[#333333] font-medium">Delete</button>
-                      </div>
+                      <>
+                        <button
+                          type="button"
+                          className="fixed inset-0 z-20 cursor-default bg-black/40 backdrop-blur-[1px]"
+                          onClick={() => setOpenDropdownId(null)}
+                          aria-label="Close routine actions"
+                        />
+                        <div className="absolute right-0 top-11 z-30 w-48 overflow-hidden rounded-2xl border border-white/10 bg-[#171717] shadow-[0_20px_60px_rgba(0,0,0,0.45)]">
+                          <div className="px-4 py-3 border-b border-white/10 bg-white/5">
+                            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9e9e9e]">Routine options</p>
+                          </div>
+                          <button onClick={() => handleEditRoutine(routine)} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-white hover:bg-white/5 font-medium transition-colors">
+                            <i className="fas fa-pen text-blue-400"></i>
+                            Edit routine
+                          </button>
+                          <button onClick={() => handleDeleteRoutine(routine.id)} className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-red-400 hover:bg-red-500/10 font-medium transition-colors">
+                            <i className="fas fa-trash"></i>
+                            Delete routine
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
                 </div>
