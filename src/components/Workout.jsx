@@ -1,6 +1,24 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 
+function ExerciseIcon({ image_url, name }) {
+  // Sekarang cek image_url, bukan icon
+  const isUrl = image_url && (image_url.startsWith('http') || image_url.startsWith('https'));
+
+  return (
+    <div className="w-12 h-12 bg-[#1c1c1e] rounded-full flex items-center justify-center overflow-hidden shrink-0 border border-[#333333]">
+      {isUrl ? (
+        <img 
+          src={image_url} // Pakai image_url
+          alt={name} 
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <div className="text-white text-xl font-bold">{name ? name.charAt(0).toUpperCase() : '?'}</div>
+      )}
+    </div>
+  );
+}
 export default function Workout() {
   const [currentView, setCurrentView] = useState('main');
   const [openDropdownId, setOpenDropdownId] = useState(null);
@@ -26,32 +44,50 @@ export default function Workout() {
     fetchRoutines();
     fetchMasterExercises();
   }, []);
-
-  const fetchRoutines = async () => {
+const fetchRoutines = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
-    // Tambahkan default_sets pada query relasi
+    // QUERY INI HARUS SESUAI DENGAN SCHEMA API YANG SUDAH DI-REFRESH
     const { data, error } = await supabase
       .from('routines')
-      .select(`id, name, created_at, routine_exercises ( default_sets, exercises ( id, name, muscle, icon ) )`)
+      .select(`
+        id, 
+        name, 
+        created_at, 
+        routine_exercises ( 
+          default_sets, 
+          exercises ( id, name, muscle, image_url ) 
+        )
+      `)
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
-    if (!error && data) {
+    if (error) {
+      console.error("Supabase Fetch Error:", error);
+      return;
+    }
+    
+    // ... sisa logic map data lu ...
+
+    if (data) {
+      console.log("Data Rutinitas:", data); // LIAT INI DI CONSOLE
       const formattedData = data.map(routine => ({
         id: routine.id,
         name: routine.name,
-        routineItems: routine.routine_exercises.map(re => ({
-          exercise: re.exercises,
-          sets: re.default_sets || [{ weight: '', reps: '' }]
+        // Gunakan optional chaining (?.) untuk mencegah error jika data null
+        routineItems: (routine.routine_exercises || []).map(re => ({
+          exercise: re.exercises || { id: 'unknown', name: 'Unknown', image_url: '❓' },
+          sets: re.default_sets && Array.isArray(re.default_sets) ? re.default_sets : [{ weight: '', reps: '' }]
         })),
-        exerciseText: routine.routine_exercises.map(re => re.exercises.name).join(', ') || 'Belum ada gerakan'
+        exerciseText: (routine.routine_exercises || [])
+          .filter(re => re.exercises)
+          .map(re => re.exercises.name)
+          .join(', ') || 'Belum ada gerakan'
       }));
       setRoutines(formattedData);
     }
   };
-
   const fetchMasterExercises = async () => {
     const { data, error } = await supabase.from('exercises').select('*').order('name', { ascending: true });
     if (!error) setMasterExercises(data);
@@ -205,8 +241,14 @@ export default function Workout() {
     const { data: { user } } = await supabase.auth.getUser();
     
     const { data, error } = await supabase
-      .from('exercises').insert([{ name: newExName, muscle: newExMuscle, icon: '✨', user_id: user.id }]).select();
-
+  .from('exercises')
+  .insert([{ 
+    name: newExName, 
+    muscle: newExMuscle, 
+    image_url: '', // Kosongkan dulu atau isi link gambar
+    user_id: user.id 
+  }])
+  .select();
     if (error) alert(error.message);
     else {
       setMasterExercises([...masterExercises, data[0]].sort((a, b) => a.name.localeCompare(b.name)));
@@ -259,11 +301,7 @@ export default function Workout() {
                 <div key={exIdx} className="flex flex-col rounded-2xl border border-[#333333] bg-gym-secondary p-4 shadow-[0_8px_24px_rgba(0,0,0,0.2)]">
                   <div className="flex justify-between items-start gap-3 mb-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 bg-white rounded-full flex items-center justify-center shrink-0">
-                        <svg className="w-10 h-10 object-contain" aria-hidden="true">
-                          <use href="/icons.svg#exercise-icon" />
-                        </svg>
-                      </div>
+                      <ExerciseIcon icon={item.exercise.icon} />
                       <div>
                         <span className="block text-white font-bold text-lg leading-tight">{item.exercise.name}</span>
                         <span className="text-[#9e9e9e] text-sm">Atur set, kg, dan reps di bawah</span>
@@ -372,11 +410,7 @@ export default function Workout() {
                 className="flex items-center justify-between py-3 border-b border-[#1c1c1e] cursor-pointer hover:bg-[#1c1c1e] px-2"
               >
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center">
-                    <svg className="w-10 h-10 object-contain" aria-hidden="true">
-                      <use href="/icons.svg#exercise-icon" />
-                    </svg>
-                  </div>
+                  <ExerciseIcon icon={ex.icon} />
                   <div>
                     <h4 className="text-white font-medium">{ex.name}</h4>
                     <p className="text-[#9e9e9e] text-sm">{ex.muscle}</p>
@@ -444,9 +478,7 @@ export default function Workout() {
             activeSession.items.map((item, itemIdx) => (
               <div key={itemIdx} className="mb-6 bg-gym-secondary p-3 rounded-xl border border-[#333333]">
                 <h3 className="text-blue-400 font-bold mb-3 flex items-center gap-2">
-                  <svg className="w-10 h-10 object-contain" aria-hidden="true">
-                    <use href="/icons.svg#exercise-icon" />
-                  </svg>
+                  <ExerciseIcon icon={item.exercise.icon} />
                   {item.exercise.name}
                 </h3>
                 <div className="grid grid-cols-4 text-[#9e9e9e] text-xs font-bold text-center mb-2 px-2">
