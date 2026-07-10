@@ -50,7 +50,7 @@ export default function App() {
         <header className="shrink-0 flex justify-between items-center px-5 pt-4 pb-2 bg-gym-secondary z-10">
           <div className="flex items-center gap-2 text-xl font-bold tracking-tight">
             <i className="fas fa-dumbbell text-purple-600 text-2xl"></i>
-            <span className="bg-gradient-to-br from-purple-600 to-orange-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-br from-purple-600 to-blue-500 bg-clip-text text-transparent">
               GymTrack
             </span>
           </div>

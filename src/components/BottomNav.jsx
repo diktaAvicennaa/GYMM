@@ -20,13 +20,13 @@ export default function BottomNav({ activeTab, setActiveTab }) {
             key={item.id}
             onClick={() => setActiveTab(item.id)}
             className={`flex flex-col items-center justify-center py-2 px-3 transition-all duration-200 relative flex-1 ${
-              isActive ? 'text-purple-500' : 'text-[#9e9e9e] hover:text-[#f0f0f0]'
+              isActive ? 'text-blue-700' : 'text-[#9e9e9e] hover:text-[#f0f0f0]'
             }`}
           >
             <i className={`${iconClass} text-xl mb-1 ${isActive ? 'scale-110' : ''} transition-transform`}></i>
             <span className="text-[10px] font-medium">{item.label}</span>
             {isActive && (
-              <span className="absolute -top-0.5 w-8 h-0.5 bg-purple-500 rounded-full"></span>
+              <span className="absolute -top-0.5 w-8 h-0.5 bg-blue-600 rounded-full"></span>
             )}
           </button>
         );
