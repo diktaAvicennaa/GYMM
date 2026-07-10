@@ -56,9 +56,16 @@ export default function Profile() {
         <div className="flex items-center gap-5 text-white text-lg">
           <i className="fas fa-pencil-alt cursor-pointer hover:text-blue-500 transition-colors" onClick={() => handleComingSoon('Edit Profil')}></i>
           <i className="fas fa-share-alt cursor-pointer hover:text-blue-500 transition-colors" onClick={() => handleComingSoon('Bagikan Profil')}></i>
-          <i className="fas fa-cog cursor-pointer hover:text-red-500 transition-colors" onClick={async () => {
-            if(window.confirm("Yakin ingin logout dari aplikasi?")) await supabase.auth.signOut();
-          }}></i>
+          <button 
+            className="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
+            onClick={async () => {
+              const { error } = await supabase.auth.signOut();
+              if (error) alert(error.message);
+              // Tidak perlu navigasi manual, App.jsx akan mendeteksi session null dan pindah ke Auth
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
