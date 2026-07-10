@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+/* Kalau kamu mau mengatur tema bawaan DaisyUI di v4, bisa ditambahkan seperti ini (Opsional) */
+@plugin "daisyui/theme" {
+  name: "dark";
+  default: true;
+}
+
+@theme {
+  --color-gym-primary: #0c0c0c;
+  --color-gym-secondary: #151515;
+  --color-gym-surface: #1e1e1e;
+  --color-gym-card: #252525;
+  --color-gym-accent: #7c3aed;
+  --color-gym-orange: #f59e0b;
+}
